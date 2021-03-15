@@ -86638,6 +86638,14 @@ Object.keys(_mainAny).forEach(function (key) {
 },{"./entry/mainAny.js":"node_modules/mathjs/lib/esm/entry/mainAny.js"}],"Expressionv2.ts":[function(require,module,exports) {
 "use strict";
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -86657,11 +86665,13 @@ Object.defineProperty(exports, "__esModule", {
 var Expression = /*#__PURE__*/function () {
   function Expression() {
     _classCallCheck(this, Expression);
+
+    Expression.__throwCannotInstantiateError();
   }
 
   _createClass(Expression, null, [{
-    key: "__parse",
-    value: function __parse(val) {
+    key: "parse",
+    value: function parse(val) {
       var value = Expression.__transformUnaryValue(Expression.__removeWhiteSpace(val));
 
       var pattern = Expression.__getExpressionPattern();
@@ -86669,6 +86679,8 @@ var Expression = /*#__PURE__*/function () {
       var execResult = pattern.exec(value);
       var result = [];
       var stack = new Stack();
+
+      var operatorList = Expression.__getOperatorList();
 
       while (execResult !== null) {
         if (Expression.__getOperandPattern().test(execResult[0])) {
@@ -86714,7 +86726,7 @@ var Expression = /*#__PURE__*/function () {
               break;
             }
 
-            if (OperatorList[expression].priority < OperatorList[operator].priority) {
+            if (operatorList[expression].priority < operatorList[operator].priority) {
               result.push(operator);
               continue;
             }
@@ -86744,9 +86756,11 @@ var Expression = /*#__PURE__*/function () {
     value: function __parseValue(value, parseFunction) {
       var keywords = Expression.__getKeyWords();
 
+      var operatorList = Expression.__getOperatorList();
+
       return value.map(function (value) {
-        if (value in OperatorList) {
-          return OperatorList[value].func;
+        if (value in operatorList) {
+          return operatorList[value].func;
         } else if (keywords.includes(value)) {
           return value;
         } else {
@@ -86763,6 +86777,8 @@ var Expression = /*#__PURE__*/function () {
 
       var stack = new Stack();
 
+      var operationFunctionList = Expression.__getOperationFunctionList();
+
       var _iterator = _createForOfIteratorHelper(value),
           _step;
 
@@ -86770,8 +86786,8 @@ var Expression = /*#__PURE__*/function () {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var expression = _step.value;
 
-          if (expression in OperationFunctionList) {
-            var operandsNeeded = OperationFunctionList[expression].operand;
+          if (expression in operationFunctionList) {
+            var operandsNeeded = operationFunctionList[expression].operand;
             var operands = [];
 
             for (var i = 0; i < operandsNeeded; i++) {
@@ -86806,7 +86822,7 @@ var Expression = /*#__PURE__*/function () {
   }, {
     key: "__getOperandPattern",
     value: function __getOperandPattern() {
-      return new RegExp("".concat(Expression.__getNumberPatternString(), "|^").concat(Expression.__getVariablePatternString(), "$"), "g");
+      return new RegExp("^".concat(Expression.__getNumberPatternString(), "$|^").concat(Expression.__getVariablePatternString(), "$"), "g");
     }
   }, {
     key: "__getNormalLeftBracketPatternString",
@@ -86850,12 +86866,22 @@ var Expression = /*#__PURE__*/function () {
   }, {
     key: "__getKeyWords",
     value: function __getKeyWords() {
-      return ["log"];
+      return _toConsumableArray(Expression.__keyWords);
     }
   }, {
     key: "__getOperators",
     value: function __getOperators() {
-      return ["+", "-", "*", "/", "^", "-@"];
+      return _toConsumableArray(Expression.__operators);
+    }
+  }, {
+    key: "__getOperatorList",
+    value: function __getOperatorList() {
+      return Object.assign({}, Expression.__operatorList);
+    }
+  }, {
+    key: "__getOperationFunctionList",
+    value: function __getOperationFunctionList() {
+      return Expression.__operationFunctionList;
     }
   }, {
     key: "__removeWhiteSpace",
@@ -86901,6 +86927,64 @@ var Expression = /*#__PURE__*/function () {
   return Expression;
 }();
 
+Expression.__keyWords = ["log", "log10", "lg"];
+Expression.__operators = ["+", "-", "*", "/", "^", "-@"];
+Expression.__operatorList = {
+  "+": {
+    priority: 1,
+    func: "add"
+  },
+  "-": {
+    priority: 1,
+    func: "subtract"
+  },
+  "*": {
+    priority: 2,
+    func: "multiply"
+  },
+  "/": {
+    priority: 2,
+    func: "divide"
+  },
+  "^": {
+    priority: 3,
+    func: "exponential"
+  },
+  "-@": {
+    priority: 4,
+    func: "negate"
+  }
+};
+Expression.__operationFunctionList = {
+  "add": {
+    operand: 2
+  },
+  "subtract": {
+    operand: 2
+  },
+  "multiply": {
+    operand: 2
+  },
+  "divide": {
+    operand: 2
+  },
+  "exponential": {
+    operand: 2
+  },
+  "negate": {
+    operand: 1
+  },
+  "log": {
+    operand: 2
+  },
+  "log10": {
+    operand: 1
+  },
+  "lg": {
+    operand: 1
+  }
+};
+
 var Stack = /*#__PURE__*/function () {
   function Stack() {
     _classCallCheck(this, Stack);
@@ -86933,55 +87017,6 @@ var Stack = /*#__PURE__*/function () {
   return Stack;
 }();
 
-var OperatorList = {
-  "+": {
-    priority: 1,
-    func: "add"
-  },
-  "-": {
-    priority: 1,
-    func: "subtract"
-  },
-  "*": {
-    priority: 2,
-    func: "multiply"
-  },
-  "/": {
-    priority: 2,
-    func: "divide"
-  },
-  "^": {
-    priority: 3,
-    func: "exponential"
-  },
-  "-@": {
-    priority: 4,
-    func: "negate"
-  }
-};
-var OperationFunctionList = {
-  "add": {
-    operand: 2
-  },
-  "subtract": {
-    operand: 2
-  },
-  "multiply": {
-    operand: 2
-  },
-  "divide": {
-    operand: 2
-  },
-  "exponential": {
-    operand: 2
-  },
-  "negate": {
-    operand: 1
-  },
-  "log": {
-    operand: 2
-  }
-};
 exports.default = Expression;
 },{}],"PeriodicTable.ts":[function(require,module,exports) {
 "use strict";
@@ -90484,7 +90519,7 @@ var ChemicalExpression = /*#__PURE__*/function () {
       value = ChemicalExpression.__clarifySubscript(value);
       value = ChemicalExpression.__clarifyMultiplier(value);
       value = ChemicalExpression.__clarifyElement(value);
-      return Expressionv2_1.default.__parse(value);
+      return Expressionv2_1.default.parse(value);
     }
   }, {
     key: "__clarifySubscript",
@@ -90768,6 +90803,12 @@ var sfn = /*#__PURE__*/function () {
       });
     }
   }, {
+    key: "lg",
+    value: function lg() {
+      // alias for log10()
+      return this.log10();
+    }
+  }, {
     key: "exponential",
     value: function exponential(exponent) {
       if (this.value.equals(sfn.__ten)) {
@@ -90836,6 +90877,11 @@ var sfn = /*#__PURE__*/function () {
     key: "log10",
     value: function log10(x) {
       return x.log10();
+    }
+  }, {
+    key: "lg",
+    value: function lg(x) {
+      return x.lg();
     }
   }, {
     key: "exponential",
@@ -90993,7 +91039,7 @@ var util = /*#__PURE__*/function () {
         }
       };
 
-      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Expressionv2_1.default.__parse(value), parseFunction), sfn);
+      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Expressionv2_1.default.parse(value), parseFunction), sfn);
     }
   }, {
     key: "__throwCannotInstantiateError",
@@ -91031,7 +91077,7 @@ var chemUtil = /*#__PURE__*/function () {
   return chemUtil;
 }();
 
-console.log(chemUtil.evaluateMolarMass("Mg(NO3)2").toString()); // scope : {x : 2.0}
+console.log(util.evaluate("log10(10)").toString()); // scope : {x : 2.0}
 //@ts-ignore
 
 window.sfn = sfn; //@ts-ignore
@@ -91073,7 +91119,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60275" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50209" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

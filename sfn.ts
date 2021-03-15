@@ -66,6 +66,10 @@ class sfn{
 
         return new sfn(value, { dp })
     }
+    lg(): sfn{
+        // alias for log10()
+        return this.log10()
+    }
     exponential(exponent: sfn): sfn{
         if (this.value.equals(sfn.__ten)){
             return this.exponential10(exponent)
@@ -112,6 +116,9 @@ class sfn{
     }
     static log10(x: sfn){
         return x.log10()
+    }
+    static lg(x: sfn){
+        return x.lg()
     }
     static exponential(base: sfn, exponent: sfn){
         return base.exponential(exponent)
@@ -224,7 +231,16 @@ class util{
     }
 
     static evaluate(value: string): sfn | undefined{
-        return Expression.__evaluateTree(Expression.__parseValue(Expression.__parse(value), sfn.create), sfn)
+        const parseFunction = (value: string) : sfn => {
+            if (value[0] === "$"){
+                // accurate number
+                return sfn.accurate(value.substring(1))
+            } else {
+                return sfn.create(value)
+            }
+        }
+
+        return Expression.__evaluateTree(Expression.__parseValue(Expression.parse(value), parseFunction), sfn)
     }
     static __throwCannotInstantiateError(): never{
         throw new SyntaxError("Cannot Instantiate Class!")
@@ -248,7 +264,7 @@ class chemUtil{
 }
 
 
-console.log(chemUtil.evaluateMolarMass("Mg(NO3)2").toString())
+console.log(util.evaluate("log10(10)").toString())
 // scope : {x : 2.0}
 
 //@ts-ignore
