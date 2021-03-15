@@ -91033,7 +91033,9 @@ window.math = math; //@ts-ignore
 
 window.ChemicalExpression = Chemical_1.default; //@ts-ignore
 
-window.chemUtil = chemUtil;
+window.chemUtil = chemUtil; //@ts-ignore
+
+window.util = util;
 },{"mathjs":"node_modules/mathjs/lib/esm/index.js","./Expressionv2":"Expressionv2.ts","./Chemical":"Chemical.ts"}],"C:/Users/zhai/AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -91062,7 +91064,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59656" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56507" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
