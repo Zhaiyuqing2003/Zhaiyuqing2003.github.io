@@ -86835,12 +86835,12 @@ var Expression = /*#__PURE__*/function () {
   }, {
     key: "__getNumberPatternString",
     value: function __getNumberPatternString() {
-      return "[\\d]+([\\.][\\d]+)?([Ee][+-]?[\\d]+)?";
+      return "\\$?[\\d]+([\\.][\\d]+)?([Ee][+-]?[\\d]+)?";
     }
   }, {
     key: "__getVariablePatternString",
     value: function __getVariablePatternString() {
-      return "[A-Za-z_$][A-Za-z0-9_$]*";
+      return "[A-Za-z_][A-Za-z0-9_$]*";
     }
   }, {
     key: "__getUnaryPatternString",
@@ -90984,7 +90984,16 @@ var util = /*#__PURE__*/function () {
   _createClass(util, null, [{
     key: "evaluate",
     value: function evaluate(value) {
-      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Expressionv2_1.default.__parse(value), sfn.create), sfn);
+      var parseFunction = function parseFunction(value) {
+        if (value[0] === "$") {
+          // accurate number
+          return sfn.accurate(value.substring(1));
+        } else {
+          return sfn.create(value);
+        }
+      };
+
+      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Expressionv2_1.default.__parse(value), parseFunction), sfn);
     }
   }, {
     key: "__throwCannotInstantiateError",
@@ -91064,7 +91073,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56507" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60275" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
