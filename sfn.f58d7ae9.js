@@ -90898,7 +90898,15 @@ var sfn = /*#__PURE__*/function () {
     key: "__regularizeValue",
     value: function __regularizeValue(value) {
       var valueString = typeof value != "string" ? value.valueOf() : value;
-      return valueString.match(sfn.__regularizePattern)[0];
+
+      var _valueString$match = valueString.match(sfn.__regularizePattern),
+          _valueString$match2 = _slicedToArray(_valueString$match, 4),
+          whole = _valueString$match2[0],
+          integerPart = _valueString$match2[1],
+          fractionPart = _valueString$match2[2],
+          exponentialPart = _valueString$match2[3];
+
+      return [integerPart, fractionPart, exponentialPart];
     }
   }, {
     key: "__parseValue",
@@ -90908,19 +90916,18 @@ var sfn = /*#__PURE__*/function () {
   }, {
     key: "__getInitialSD",
     value: function __getInitialSD(value, dp) {
-      var baseString = sfn.__regularizeValue(value);
+      var baseStringArray = sfn.__regularizeValue(value);
 
-      var _baseString$split = baseString.split("."),
-          _baseString$split2 = _slicedToArray(_baseString$split, 2),
-          integerPart = _baseString$split2[0],
-          fractionPart = _baseString$split2[1];
+      var _baseStringArray = _slicedToArray(baseStringArray, 2),
+          integerPart = _baseStringArray[0],
+          fractionPart = _baseStringArray[1];
 
       var intLength = integerPart.length;
       var fractionLength = fractionPart !== undefined ? fractionPart.length : 0;
 
       if (dp !== undefined) {
-        if (integerPart == "0") {
-          if (fractionPart) {
+        if (integerPart === "0") {
+          if (fractionPart !== undefined) {
             if (dp >= fractionLength) {
               for (var i = 0; i < fractionLength; i++) {
                 if (fractionPart[i] != "0") {
@@ -90973,33 +90980,41 @@ var sfn = /*#__PURE__*/function () {
   }, {
     key: "__getInitialDP",
     value: function __getInitialDP(value, sd) {
-      var baseString = sfn.__regularizeValue(value);
+      var baseStringArray = sfn.__regularizeValue(value);
 
-      var _baseString$split3 = baseString.split("."),
-          _baseString$split4 = _slicedToArray(_baseString$split3, 2),
-          integerPart = _baseString$split4[0],
-          fractionPart = _baseString$split4[1];
+      var _baseStringArray2 = _slicedToArray(baseStringArray, 3),
+          integerPart = _baseStringArray2[0],
+          fractionPart = _baseStringArray2[1],
+          exponentialPart = _baseStringArray2[2];
 
       var intLength = integerPart.length;
       var fractionLength = fractionPart !== undefined ? fractionPart.length : 0;
+      var exponentialLength = exponentialPart !== undefined ? -math.number(exponentialPart) : 0;
 
       if (sd !== undefined) {
-        if (integerPart == "0") {
+        if (integerPart === "0") {
           for (var i = 0; i < fractionLength; i++) {
-            if (fractionPart[i] != "0") {
-              return i + sd;
+            if (fractionPart[i] !== "0") {
+              return i + sd + exponentialLength;
             }
           }
 
-          if (sd == 0) {
+          if (sd === 0) {
             return fractionLength;
+          } else {
+            sfn.throwZeroValueNonZeroSignificantNumberError();
           }
         } else {
-          return math.max(sd - intLength, 0);
+          return math.max(sd - intLength + exponentialLength, 0);
         }
       } else {
-        return fractionLength;
+        return fractionLength + exponentialLength;
       }
+    }
+  }, {
+    key: "throwZeroValueNonZeroSignificantNumberError",
+    value: function throwZeroValueNonZeroSignificantNumberError() {
+      throw new SyntaxError("Number with form 0.00... have a nonZero Significant Digit!");
     }
   }, {
     key: "create",
@@ -91019,7 +91034,7 @@ var sfn = /*#__PURE__*/function () {
 }();
 
 sfn.__ten = math.evaluate("10");
-sfn.__regularizePattern = /[\d]+([\.][\d]+)?/;
+sfn.__regularizePattern = /([\d]+)(?:[\.]([\d]+))?(?:[Ee]([+-]?[\d]+))?/;
 
 var Provider = /*#__PURE__*/function () {
   function Provider(scope) {
@@ -91312,7 +91327,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51656" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58582" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

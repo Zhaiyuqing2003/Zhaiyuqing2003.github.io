@@ -1,4 +1,3 @@
-//@ts-ignore
 import { all, create, BigNumber } from "mathjs";
 import Expression from "./Expressionv2";
 import ChemicalExpression from "./Chemical"
@@ -101,25 +100,28 @@ class sfn{
         }
     }
     static __ten : BigNumber = math.evaluate("10");
-    static __regularizePattern : RegExp = /[\d]+([\.][\d]+)?/
+    static __regularizePattern : RegExp = /([\d]+)(?:[\.]([\d]+))?(?:[Ee]([+-]?[\d]+))?/
     static __regularizeValue(value: string | BigNumber){
         let valueString: string = (typeof value != "string") ? value.valueOf() : value;
 
-        return valueString.match(sfn.__regularizePattern)[0]
+        let [whole, integerPart, fractionPart, exponentialPart] = valueString.match(sfn.__regularizePattern)
+
+        return [integerPart, fractionPart, exponentialPart]
     }
     static __parseValue(value: string | BigNumber): BigNumber{
         return (typeof value == "string") ? math.evaluate(value) : value;
     }
     static __getInitialSD(value: string | BigNumber, dp ?: number): number{
-        let baseString = sfn.__regularizeValue(value);
+        let baseStringArray = sfn.__regularizeValue(value);
 
-        let [integerPart, fractionPart] = baseString.split(".");
+        let [integerPart, fractionPart] = baseStringArray
+
         let intLength = integerPart.length;
         let fractionLength = (fractionPart !== undefined) ? fractionPart.length : 0;
 
         if (dp !== undefined){
-            if (integerPart == "0"){
-                if (fractionPart){
+            if (integerPart ===  "0"){
+                if (fractionPart !== undefined){
                     if (dp >= fractionLength){
                         for (let i = 0; i < fractionLength; i ++){
                             if (fractionPart[i] != "0"){
@@ -167,28 +169,37 @@ class sfn{
         }
     }
     static __getInitialDP(value: string | BigNumber, sd ?: number): number{
-        let baseString = sfn.__regularizeValue(value);
+        let baseStringArray = sfn.__regularizeValue(value);
 
-        let [integerPart, fractionPart] = baseString.split(".");
+        let [integerPart, fractionPart, exponentialPart] = baseStringArray
+
         let intLength = integerPart.length;
         let fractionLength = (fractionPart !== undefined) ? fractionPart.length : 0;
+        let exponentialLength = (exponentialPart !== undefined)
+            ? -math.number(exponentialPart) as number
+            : 0;
 
         if (sd !== undefined){
-            if (integerPart == "0"){
+            if (integerPart === "0"){
                 for (let i = 0; i < fractionLength; i ++){
-                    if (fractionPart[i] != "0"){
-                        return i + sd;
+                    if (fractionPart[i] !== "0"){
+                        return i + sd + exponentialLength;
                     }
                 }
-                if (sd == 0){
+                if (sd === 0){
                     return fractionLength;
+                } else {
+                    sfn.throwZeroValueNonZeroSignificantNumberError()
                 }
             } else {
-                return math.max(sd - intLength, 0)
+                return math.max(sd - intLength + exponentialLength, 0)
             }
         } else {
-            return fractionLength
+            return fractionLength + exponentialLength
         }
+    }
+    static throwZeroValueNonZeroSignificantNumberError(){
+        throw new SyntaxError("Number with form 0.00... have a nonZero Significant Digit!")
     }
     static create(value: string): sfn{
         return new sfn(value, {});
@@ -296,7 +307,6 @@ class util{
         const provider = new Provider(util.getScope())
         const valueTree = Expression.__parseValue(Expression.parse(value), parseFunction, parseVariableFunction)
 
-        //@ts-ignore
         const result = Expression.__evaluateTree<sfn, string>(valueTree, provider)
         if (util.__isLastResultVariableEnable){
             util.getScope().set(util.__lastResultVariableName, result)
@@ -350,7 +360,6 @@ class chemUtil{
         const provider = new Provider(chemUtil.getScope())
         const parseTree = Expression.__parseValue(ChemicalExpression.parse(value), parseFunction, parseVariableFunction)
 
-        //@ts-ignore
         return Expression.__evaluateTree<sfn, string>(parseTree, provider)
     }
     static evalMM(value: string): sfn | undefined{
