@@ -86690,6 +86690,10 @@ var Expression = /*#__PURE__*/function () {
           var expression = execResult[0];
 
           while (true) {
+            if (expression === "=") {
+              result.push("=@");
+            }
+
             if (stack.isEmpty()) {
               stack.push(expression);
               break;
@@ -86753,18 +86757,32 @@ var Expression = /*#__PURE__*/function () {
     }
   }, {
     key: "__parseValue",
-    value: function __parseValue(value, parseFunction) {
+    value: function __parseValue(value, parseFunction, parseVariableFunction) {
+      // might consider open the functionality for
+      // the customized operator Parsing & keyWordParsing & variable parsing
       var keywords = Expression.__getKeyWords();
+
+      var isVariable = Expression.__getVariablePattern();
 
       var operatorList = Expression.__getOperatorList();
 
-      return value.map(function (value) {
-        if (value in operatorList) {
-          return operatorList[value].func;
-        } else if (keywords.includes(value)) {
-          return value;
+      return value.map(function (expression, index) {
+        if (expression in operatorList) {
+          return operatorList[expression].func;
+        } else if (keywords.includes(expression)) {
+          return expression;
         } else {
-          return parseFunction(value);
+          // identify the "variable" here
+          if (index !== value.length - 1 && value[index + 1] === "=@") {
+            // oh ! variable !
+            if (isVariable.test(expression)) {
+              return parseVariableFunction(expression);
+            } else {
+              Expression.__throwInvalidIdentifierError();
+            }
+          } else {
+            return parseFunction(expression);
+          }
         }
       });
     }
@@ -86825,6 +86843,11 @@ var Expression = /*#__PURE__*/function () {
       return new RegExp("^".concat(Expression.__getNumberPatternString(), "$|^").concat(Expression.__getVariablePatternString(), "$"), "g");
     }
   }, {
+    key: "__getVariablePattern",
+    value: function __getVariablePattern() {
+      return new RegExp("^".concat(Expression.__getVariablePatternString(), "$"));
+    }
+  }, {
     key: "__getNormalLeftBracketPatternString",
     value: function __getNormalLeftBracketPatternString() {
       var keywords = Expression.__getKeyWords().join("|");
@@ -86846,7 +86869,7 @@ var Expression = /*#__PURE__*/function () {
   }, {
     key: "__getOperatorPatternString",
     value: function __getOperatorPatternString() {
-      return "\\*|\\/|\\+|(\\-\\@)|\\-|\\^|\\%";
+      return "\\*|\\/|\\+|(\\-\\@)|\\-|\\^|\\%|\\=|(\\=\\@)";
     }
   }, {
     key: "__getNumberPatternString",
@@ -86913,6 +86936,11 @@ var Expression = /*#__PURE__*/function () {
       });
     }
   }, {
+    key: "__throwInvalidIdentifierError",
+    value: function __throwInvalidIdentifierError() {
+      throw new SyntaxError("Illegal Expression: invalid identifier for variables");
+    }
+  }, {
     key: "__throwMissingParameterError",
     value: function __throwMissingParameterError(functionName, expect, actual) {
       throw new SyntaxError("Illegal Expression, ".concat(functionName, " expects ").concat(expect, " parameters, but gets ").concat(actual, " parameters"));
@@ -86928,8 +86956,12 @@ var Expression = /*#__PURE__*/function () {
 }();
 
 Expression.__keyWords = ["log", "log10", "lg"];
-Expression.__operators = ["+", "-", "*", "/", "^", "-@"];
+Expression.__operators = ["+", "-", "*", "/", "^", "-@", "=", "=@"];
 Expression.__operatorList = {
+  "=": {
+    priority: 0,
+    func: "assign"
+  },
   "+": {
     priority: 1,
     func: "add"
@@ -86953,6 +86985,10 @@ Expression.__operatorList = {
   "-@": {
     priority: 4,
     func: "negate"
+  },
+  "=@": {
+    priority: 4,
+    func: "register"
   }
 };
 Expression.__operationFunctionList = {
@@ -86972,6 +87008,12 @@ Expression.__operationFunctionList = {
     operand: 2
   },
   "negate": {
+    operand: 1
+  },
+  "assign": {
+    operand: 2
+  },
+  "register": {
     operand: 1
   },
   "log": {
@@ -90617,10 +90659,12 @@ var ChemicalExpression = /*#__PURE__*/function () {
     }
   }, {
     key: "__parseMolarMass",
-    value: function __parseMolarMass(value, parseValueFunction, parseNumberFunction) {
+    value: function __parseMolarMass(value, parseValueFunction, parseNumberFunction, parseVariableFunction) {
       var chemicalPattern = ChemicalExpression.__getFullChemicalElementPattern();
 
       var multiplierPattern = ChemicalExpression.__getUnsignedIntPattern();
+
+      var variablePattern = Expressionv2_1.default.__getVariablePattern();
 
       if (parseNumberFunction === undefined) {
         parseNumberFunction = parseValueFunction;
@@ -90631,6 +90675,8 @@ var ChemicalExpression = /*#__PURE__*/function () {
         return parseNumberFunction(value);
       } else if (chemicalPattern.test(value)) {
         return parseValueFunction(ChemicalExpression.__getAtomicMassStringFromSymbol(value));
+      } else if (variablePattern.test(value)) {
+        return parseVariableFunction(value);
       } else {
         ChemicalExpression.__throwInvalidChemicalExpression(value);
       }
@@ -90849,51 +90895,6 @@ var sfn = /*#__PURE__*/function () {
       }
     }
   }], [{
-    key: "add",
-    value: function add(x, y) {
-      return x.add(y);
-    }
-  }, {
-    key: "subtract",
-    value: function subtract(x, y) {
-      return x.subtract(y);
-    }
-  }, {
-    key: "multiply",
-    value: function multiply(x, y) {
-      return x.multiply(y);
-    }
-  }, {
-    key: "divide",
-    value: function divide(x, y) {
-      return x.divide(y);
-    }
-  }, {
-    key: "log",
-    value: function log(x, base) {
-      return x.log(base);
-    }
-  }, {
-    key: "log10",
-    value: function log10(x) {
-      return x.log10();
-    }
-  }, {
-    key: "lg",
-    value: function lg(x) {
-      return x.lg();
-    }
-  }, {
-    key: "exponential",
-    value: function exponential(base, exponent) {
-      return base.exponential(exponent);
-    }
-  }, {
-    key: "negate",
-    value: function negate(x) {
-      return x.negate();
-    }
-  }, {
     key: "__regularizeValue",
     value: function __regularizeValue(value) {
       var valueString = typeof value != "string" ? value.valueOf() : value;
@@ -91020,26 +91021,68 @@ var sfn = /*#__PURE__*/function () {
 sfn.__ten = math.evaluate("10");
 sfn.__regularizePattern = /[\d]+([\.][\d]+)?/;
 
-var util = /*#__PURE__*/function () {
-  function util() {
-    _classCallCheck(this, util);
+var Provider = /*#__PURE__*/function () {
+  function Provider(scope) {
+    _classCallCheck(this, Provider);
 
-    util.__throwCannotInstantiateError();
+    this.scope = scope;
   }
 
-  _createClass(util, null, [{
-    key: "evaluate",
-    value: function evaluate(value) {
-      var parseFunction = function parseFunction(value) {
-        if (value[0] === "$") {
-          // accurate number
-          return sfn.accurate(value.substring(1));
-        } else {
-          return sfn.create(value);
-        }
-      };
-
-      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Expressionv2_1.default.parse(value), parseFunction), sfn);
+  _createClass(Provider, [{
+    key: "add",
+    value: function add(x, y) {
+      return x.add(y);
+    }
+  }, {
+    key: "subtract",
+    value: function subtract(x, y) {
+      return x.subtract(y);
+    }
+  }, {
+    key: "multiply",
+    value: function multiply(x, y) {
+      return x.multiply(y);
+    }
+  }, {
+    key: "divide",
+    value: function divide(x, y) {
+      return x.divide(y);
+    }
+  }, {
+    key: "log",
+    value: function log(x, base) {
+      return x.log(base);
+    }
+  }, {
+    key: "log10",
+    value: function log10(x) {
+      return x.log10();
+    }
+  }, {
+    key: "lg",
+    value: function lg(x) {
+      return x.lg();
+    }
+  }, {
+    key: "exponential",
+    value: function exponential(base, exponent) {
+      return base.exponential(exponent);
+    }
+  }, {
+    key: "negate",
+    value: function negate(x) {
+      return x.negate();
+    }
+  }, {
+    key: "register",
+    value: function register(identifier) {
+      return identifier;
+    }
+  }, {
+    key: "assign",
+    value: function assign(identifier, x) {
+      this.scope.set(identifier, x);
+      return x;
     }
   }, {
     key: "__throwCannotInstantiateError",
@@ -91048,8 +91091,117 @@ var util = /*#__PURE__*/function () {
     }
   }]);
 
+  return Provider;
+}();
+
+var Scope = /*#__PURE__*/function () {
+  function Scope() {
+    _classCallCheck(this, Scope);
+
+    this.variable = {};
+  }
+
+  _createClass(Scope, [{
+    key: "get",
+    value: function get(identifier) {
+      return this.variable[identifier];
+    }
+  }, {
+    key: "set",
+    value: function set(identifier, value) {
+      this.variable[identifier] = value;
+    }
+  }, {
+    key: "clear",
+    value: function clear() {
+      this.variable = {};
+    }
+  }]);
+
+  return Scope;
+}();
+
+var util = /*#__PURE__*/function () {
+  function util() {
+    _classCallCheck(this, util);
+
+    util.__throwCannotInstantiateError();
+  }
+
+  _createClass(util, null, [{
+    key: "getScope",
+    value: function getScope() {
+      return util.__scope;
+    }
+  }, {
+    key: "setScope",
+    value: function setScope(scope) {
+      util.__scope = scope;
+    }
+  }, {
+    key: "evaluate",
+    value: function evaluate(value) {
+      var parseFunction = function parseFunction(expression) {
+        var isVariable = Expressionv2_1.default.__getVariablePattern();
+
+        if (isVariable.test(expression)) {
+          var variableValue = util.getScope().get(expression);
+
+          if (variableValue === undefined) {
+            util.__throwUndefinedVariableError();
+          }
+
+          return variableValue;
+        } else {
+          if (expression[0] === "$") {
+            // accurate number
+            return sfn.accurate(expression.substring(1));
+          } else {
+            return sfn.create(expression);
+          }
+        }
+      };
+
+      var parseVariableFunction = function parseVariableFunction(expression) {
+        return expression;
+      };
+
+      var provider = new Provider(util.getScope());
+
+      var valueTree = Expressionv2_1.default.__parseValue(Expressionv2_1.default.parse(value), parseFunction, parseVariableFunction);
+
+      var result = Expressionv2_1.default.__evaluateTree(valueTree, provider);
+
+      if (util.__isLastResultVariableEnable) {
+        util.getScope().set(util.__lastResultVariableName, result);
+      }
+
+      return result;
+    }
+  }, {
+    key: "eval",
+    value: function _eval(value) {
+      return util.evaluate(value);
+    }
+  }, {
+    key: "__throwCannotInstantiateError",
+    value: function __throwCannotInstantiateError() {
+      throw new SyntaxError("Cannot Instantiate Class!");
+    }
+  }, {
+    key: "__throwUndefinedVariableError",
+    value: function __throwUndefinedVariableError() {
+      throw new ReferenceError("Variable is undefined");
+    }
+  }]);
+
   return util;
 }();
+
+util.__isLastResultVariableEnable = true;
+util.__lastResultVariableName = "_";
+util.__defaultScope = new Scope();
+util.__scope = util.__defaultScope;
 
 var chemUtil = /*#__PURE__*/function () {
   function chemUtil() {
@@ -91059,13 +91211,52 @@ var chemUtil = /*#__PURE__*/function () {
   }
 
   _createClass(chemUtil, null, [{
+    key: "getScope",
+    value: function getScope() {
+      return chemUtil.__scope;
+    }
+  }, {
+    key: "setScope",
+    value: function setScope(scope) {
+      chemUtil.__scope = scope;
+    }
+  }, {
     key: "evaluateMolarMass",
     value: function evaluateMolarMass(value) {
-      var parseFunction = function parseFunction(value) {
-        return Chemical_1.default.__parseMolarMass(value, sfn.create, sfn.accurate);
+      var parseFunction = function parseFunction(expression) {
+        return Chemical_1.default.__parseMolarMass(expression, sfn.create, sfn.accurate, innerParseVariableFunction);
       };
 
-      return Expressionv2_1.default.__evaluateTree(Expressionv2_1.default.__parseValue(Chemical_1.default.parse(value), parseFunction), sfn);
+      var innerParseVariableFunction = function innerParseVariableFunction(expression) {
+        var variableValue = chemUtil.getScope().get(expression); //find variable
+
+        if (variableValue === undefined) {
+          chemUtil.__throwUndefinedVariableError();
+        } // parse the variable value
+
+
+        return variableValue;
+      };
+
+      var parseVariableFunction = function parseVariableFunction(value) {
+        return value;
+      };
+
+      var provider = new Provider(chemUtil.getScope());
+
+      var parseTree = Expressionv2_1.default.__parseValue(Chemical_1.default.parse(value), parseFunction, parseVariableFunction);
+
+      return Expressionv2_1.default.__evaluateTree(parseTree, provider);
+    }
+  }, {
+    key: "evalMM",
+    value: function evalMM(value) {
+      return chemUtil.evaluateMolarMass(value);
+    }
+  }, {
+    key: "__throwUndefinedVariableError",
+    value: function __throwUndefinedVariableError() {
+      throw new ReferenceError("Variable is undefined");
     }
   }, {
     key: "__throwCannotInstantiateError",
@@ -91077,6 +91268,8 @@ var chemUtil = /*#__PURE__*/function () {
   return chemUtil;
 }();
 
+chemUtil.__defaultScope = new Scope();
+chemUtil.__scope = chemUtil.__defaultScope;
 console.log(util.evaluate("log10(10)").toString()); // scope : {x : 2.0}
 //@ts-ignore
 
@@ -91119,7 +91312,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50209" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51656" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -1,3 +1,4 @@
+//@ts-ignore
 import { all, create, BigNumber } from "mathjs";
 import Expression from "./Expressionv2";
 import ChemicalExpression from "./Chemical"
@@ -99,33 +100,6 @@ class sfn{
             return this.value.toPrecision(this.digit);
         }
     }
-    static add(x: sfn, y: sfn){
-        return x.add(y)
-    }
-    static subtract(x: sfn, y: sfn){
-        return x.subtract(y)
-    }
-    static multiply(x: sfn, y: sfn){
-        return x.multiply(y)
-    }
-    static divide(x: sfn, y: sfn){
-        return x.divide(y)
-    }
-    static log(x: sfn, base: sfn){
-        return x.log(base)
-    }
-    static log10(x: sfn){
-        return x.log10()
-    }
-    static lg(x: sfn){
-        return x.lg()
-    }
-    static exponential(base: sfn, exponent: sfn){
-        return base.exponential(exponent)
-    }
-    static negate(x: sfn){
-        return x.negate()
-    }
     static __ten : BigNumber = math.evaluate("10");
     static __regularizePattern : RegExp = /[\d]+([\.][\d]+)?/
     static __regularizeValue(value: string | BigNumber){
@@ -222,45 +196,174 @@ class sfn{
     static accurate(value: string): sfn{
         return new sfn(value, { sd : 1000000 })
     }
-
 }
+
+class Provider{
+    scope : Scope
+    constructor(scope: Scope){
+        this.scope = scope
+    }
+    add(x: sfn, y: sfn){
+        return x.add(y)
+    }
+    subtract(x: sfn, y: sfn){
+        return x.subtract(y)
+    }
+    multiply(x: sfn, y: sfn){
+        return x.multiply(y)
+    }
+    divide(x: sfn, y: sfn){
+        return x.divide(y)
+    }
+    log(x: sfn, base: sfn){
+        return x.log(base)
+    }
+    log10(x: sfn){
+        return x.log10()
+    }
+    lg(x: sfn){
+        return x.lg()
+    }
+    exponential(base: sfn, exponent: sfn){
+        return base.exponential(exponent)
+    }
+    negate(x: sfn){
+        return x.negate()
+    }
+    register(identifier: string): string{
+        return identifier
+    }
+    assign(identifier : string, x: sfn): sfn{
+        this.scope.set(identifier, x)
+        return x
+    }
+    __throwCannotInstantiateError(): never{
+        throw new SyntaxError("Cannot Instantiate Class!")
+    }
+}
+
+class Scope{
+    variable : {
+        [index : string] : any
+    }
+    constructor(){
+        this.variable = {}
+    }
+    get(identifier: string){
+        return this.variable[identifier]
+    }
+    set(identifier: string, value: any): void{
+        this.variable[identifier] = value
+    }
+    clear(){
+        this.variable = {}
+    }
+}
+
 
 class util{
     constructor(){
         util.__throwCannotInstantiateError()
     }
-
+    static getScope(){
+        return util.__scope
+    }
+    static setScope(scope: Scope){
+        util.__scope = scope
+    }
     static evaluate(value: string): sfn | undefined{
-        const parseFunction = (value: string) : sfn => {
-            if (value[0] === "$"){
-                // accurate number
-                return sfn.accurate(value.substring(1))
+        const parseFunction = (expression: string) : sfn => {
+            let isVariable = Expression.__getVariablePattern()
+
+            if (isVariable.test(expression)){
+                let variableValue = util.getScope().get(expression)
+                if (variableValue === undefined){
+                    util.__throwUndefinedVariableError()
+                }
+                return variableValue
             } else {
-                return sfn.create(value)
+                if (expression[0] === "$"){
+                    // accurate number
+                    return sfn.accurate(expression.substring(1))
+                } else {
+                    return sfn.create(expression)
+                }
             }
         }
+        const parseVariableFunction = (expression: string) : string => {
+            return expression
+        }
+        const provider = new Provider(util.getScope())
+        const valueTree = Expression.__parseValue(Expression.parse(value), parseFunction, parseVariableFunction)
 
-        return Expression.__evaluateTree(Expression.__parseValue(Expression.parse(value), parseFunction), sfn)
+        //@ts-ignore
+        const result = Expression.__evaluateTree<sfn, string>(valueTree, provider)
+        if (util.__isLastResultVariableEnable){
+            util.getScope().set(util.__lastResultVariableName, result)
+        }
+        return result
+    }
+    static eval(value: string): sfn | undefined{
+        return util.evaluate(value)
     }
     static __throwCannotInstantiateError(): never{
         throw new SyntaxError("Cannot Instantiate Class!")
     }
+    static __throwUndefinedVariableError(): never{
+        throw new ReferenceError("Variable is undefined")
+    }
+    static __isLastResultVariableEnable = true;
+    static __lastResultVariableName = "_";
+    static __defaultScope = new Scope()
+    static __scope = util.__defaultScope
 }
 
 class chemUtil{
     constructor(){
         chemUtil.__throwCannotInstantiateError()
     }
+    static getScope(){
+        return chemUtil.__scope
+    }
+    static setScope(scope: Scope){
+        chemUtil.__scope = scope
+    }
     static evaluateMolarMass(value: string): sfn | undefined{
-        const parseFunction = (value: string) : sfn => {
-            return ChemicalExpression.__parseMolarMass(value, sfn.create, sfn.accurate)
+        const parseFunction = (expression: string) : sfn => {
+            return ChemicalExpression.__parseMolarMass(
+                expression, sfn.create, sfn.accurate,
+                innerParseVariableFunction
+            )
         }
+        const innerParseVariableFunction = (expression) : sfn => {
+            let variableValue = chemUtil.getScope().get(expression)
+            //find variable
+            if (variableValue === undefined){
+                chemUtil.__throwUndefinedVariableError()
+            }
+            // parse the variable value
+            return variableValue
+        }
+        const parseVariableFunction = (value: string) : string => {
+            return value
+        }
+        const provider = new Provider(chemUtil.getScope())
+        const parseTree = Expression.__parseValue(ChemicalExpression.parse(value), parseFunction, parseVariableFunction)
 
-        return Expression.__evaluateTree(Expression.__parseValue(ChemicalExpression.parse(value), parseFunction), sfn)
+        //@ts-ignore
+        return Expression.__evaluateTree<sfn, string>(parseTree, provider)
+    }
+    static evalMM(value: string): sfn | undefined{
+        return chemUtil.evaluateMolarMass(value)
+    }
+    static __throwUndefinedVariableError(): never{
+        throw new ReferenceError("Variable is undefined")
     }
     static __throwCannotInstantiateError(): never{
         throw new SyntaxError("Cannot Instantiate Class!")
     }
+    static __defaultScope = new Scope()
+    static __scope = chemUtil.__defaultScope
 }
 
 
