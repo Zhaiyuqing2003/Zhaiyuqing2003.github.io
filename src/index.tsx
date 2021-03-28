@@ -1,17 +1,29 @@
 import * as React from "react";
 import { useState, useRef, forwardRef, useEffect, createRef } from "react";
 import ReactDOM from "react-dom";
-import { util, chemUtil, Scope } from "./lib/sfn"
+import Util from "./lib/Util"
+import Scope from  "./lib/Scope"
+import Expression from "./lib/ExpressionV4"
+import ChemicalExpression from "./lib/ChemicalExpressionV2"
+import SignificantNumber from "./lib/SignificantNumber"
 import { ThemeProvider, Container, createMuiTheme, CssBaseline, makeStyles, Box, Grid, TextField, InputAdornment, IconButton, Paper, useTheme, Typography } from "@material-ui/core"
-import { blue, green } from "@material-ui/core/colors"
+import { blue, green, red } from "@material-ui/core/colors"
 import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn';
 import ScienceIcon from './components/scienceIcon'
 import ScienceFilledIcon from "./components/scienceIconFilled"
+import ExplicitIcon from '@material-ui/icons/Explicit';
 import detector from "detector"
+
+//@ts-ignore
+window.Expression = Expression
+//@ts-ignore
+window.chemicalExpression = ChemicalExpression
+//@ts-ignore
+window.Scope = Scope;
+
 
 function main(){
     const container = document.querySelector("#container")
-    console.log(detector)
 
     let vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -51,7 +63,6 @@ const AppTheme = createMuiTheme({
         }
     }
 })
-console.log(AppTheme)
 const useAppStyle = makeStyles((theme) => ({
     container : {
         height : "calc(var(--vh) * 100)",
@@ -68,7 +79,12 @@ const useAppStyle = makeStyles((theme) => ({
         height : "100%"
     },
     variableContent : {
-        width : "calc(10% + 240px)"
+        [theme.breakpoints.down(600)] : {
+            display : "none"
+        },
+        width : "calc(10% + 240px)",
+        height : "100%",
+        overflow : "scroll"
     },
     textField : {
         width : "100%"
@@ -99,9 +115,11 @@ const useAppStyle = makeStyles((theme) => ({
 }))
 
 let id = 0;
-let globalScope = new Scope();
-util.setScope(globalScope);
-chemUtil.setScope(globalScope);
+const globalScope = new Scope<SignificantNumber>();
+const util = new Util(globalScope)
+
+util.enableResultRecording()
+util.enableScopeRecording()
 
 function App(props){
     const classes = useAppStyle()
@@ -109,10 +127,13 @@ function App(props){
     const [list, setList] = useState([]);
     const [value, setValue] = useState("");
     const [scope, setScope] = useState([]);
+    const [isExact, setIsExact] = useState(false);
     const [isChemistryHandler, setIsChemistryHandler] = useState(false)
     const [focusedElementIndexPair, setFocusedElementIndexPair]
         : [focusedElementIndexPair: [number, boolean], setFocusedElementIndexPair : Function] = useState([-1, false])
-    console.log(list.length, focusedElementIndexPair)
+    const inputRef = useRef(null);
+    const [inputCursor, setInputCursor] = useState([0])
+
 
     function handleKeyPress(event: React.KeyboardEvent){
         if (event.code === "Enter" || event.key === "Enter"){
@@ -121,10 +142,25 @@ function App(props){
             } else {
                 if (focusedElementIndexPair[0] > -1){
                     if (list[focusedElementIndexPair[0]] !== undefined){
-                        let addedValue = list[focusedElementIndexPair[0]].content
+                        let addedValue = (isExact) ? list[focusedElementIndexPair[0]].exactContent : list[focusedElementIndexPair[0]].content
 
-                        setValue((prevValue) => prevValue + addedValue)
+                        let nextSelection;
+
+                        setValue((prevValue) => {
+                            let beforeValue = prevValue.substring(0, inputRef.current.selectionStart)
+                            let afterValue = prevValue.substring(inputRef.current.selectionEnd)
+
+                            nextSelection = beforeValue.length + addedValue.length
+
+                            setInputCursor(nextSelection)
+
+                            let nextValue = beforeValue + addedValue + afterValue
+
+                            return nextValue
+                        })
+
                         setFocusedElementIndexPair([list.length, false])
+                        //inputRef.current.focus()
                     }
                 }
             }
@@ -132,23 +168,42 @@ function App(props){
     }
     function handleKeyDown(event: React.KeyboardEvent){
         if (event.code === "ArrowUp" || event.code === "ArrowDown"){
-            if (event.code === "ArrowUp"){
-                setFocusedElementIndexPair((prevFocusedElementIndexPair) => [
-                    Math.max(prevFocusedElementIndexPair[0] - 1, 0)
-                , true])
-            } else if (event.code === "ArrowDown"){
-                setFocusedElementIndexPair((prevFocusedElementIndexPair) => [
-                    Math.min(prevFocusedElementIndexPair[0] + 1, list.length - 1)
-                , true])
-            }
+
+            setFocusedElementIndexPair((prevFocusedElementIndexPair) => {
+                let step = (event.code === "ArrowUp") ? -1 : 1;
+                let delta = 1
+
+                while (true){
+                    let index = prevFocusedElementIndexPair[0] + delta * step
+                    if (index < 0 || index > list.length - 1){
+                        return prevFocusedElementIndexPair
+                    } else {
+                        if (list[index].type !== "error"){
+                            return [index, true]
+                        }
+                    }
+                    delta += 1
+                }
+            })
+
             event.stopPropagation()
+            event.preventDefault()
         } else if (event.ctrlKey || event.key === "Ctrl") {
             if (event.altKey || event.key === "Alt"){
-                setIsChemistryHandler((prevIsChemistryHandler) => !prevIsChemistryHandler)
+                if (event.code === "KeyC" || event.key === "c" || event.key === "C"){
+                    setIsChemistryHandler((prevIsChemistryHandler) => !prevIsChemistryHandler)
 
-                event.stopPropagation()
+                    event.stopPropagation()
+                    event.preventDefault()
+                } else if (event.code === "KeyE" || event.key === "e" || event.key === "E"){
+                    setIsExact((prevIsExact) => !prevIsExact)
+
+                    event.stopPropagation()
+                    event.preventDefault()
+                }
             }
         }
+
     }
     function onMouseEnter(id){
         setFocusedElementIndexPair([id, false])
@@ -158,9 +213,26 @@ function App(props){
     }
     function onExpressionClick(id){
         if (id !== -1){
-            if (list[id] !== undefined){
-                let addedValue = list[id].content
-                setValue((prevValue) => prevValue + addedValue)
+            if (list[id] !== undefined && list[id].type !== "error"){
+
+                let addedValue : string = (isExact) ? list[id].exactContent : list[id].content
+
+                let nextSelection;
+
+                setValue((prevValue) => {
+                    let beforeValue = prevValue.substring(0, inputRef.current.selectionStart)
+                    let afterValue = prevValue.substring(inputRef.current.selectionEnd)
+
+                    nextSelection = beforeValue.length + addedValue.length
+
+                    setInputCursor(nextSelection)
+
+                    let nextValue = beforeValue + addedValue + afterValue
+
+                    return nextValue
+                })
+
+                inputRef.current.focus()
             }
         }
     }
@@ -169,29 +241,70 @@ function App(props){
             return
         }
         let output;
+        let isError;
+        let resultVariables;
+        let orderedVariables;
         try{
             if (isChemistryHandler){
-                output = chemUtil.evaluateMolarMass(value).toString()
+                [output, resultVariables] = util.evaluateAtomicMass(value)
             } else {
-                output = util.evaluate(value).toString()
+                [output, resultVariables, orderedVariables] = util.evaluate(value)
             }
+            isError = false;
         } catch (e){
-            output = e.toString()
+            output = e
+            resultVariables = ""
+            isError = true;
         }
         setList([...list, {
             //@ts-ignore
             content : value,
+            exactContent : value,
             type : "input",
             ref : createRef(),
             id : id
         }, {
-            content : output,
-            type : "output",
+            content : output.toString(),
+            exactContent : resultVariables.toString(),
+            type : (isError) ? "error" : "output",
             ref : createRef(),
             id : id + 1
         }])
         id += 2;
-        setScope(globalScope.getAsArray())
+
+        if (!isError){
+            let globalScopeObject = globalScope.toObject()
+            let orderedScopeArray = []
+            let filteredScopeArray = []
+
+
+            if (globalScopeObject["ans"] !== undefined){
+                orderedScopeArray.push(["ans", globalScopeObject["ans"]])
+            } else {
+                // couldn't happen
+            }
+
+            for (let identifier of orderedVariables){
+                if (identifier === "ans"){
+                    continue
+                }
+                if (globalScopeObject[identifier] !== undefined){
+                    orderedScopeArray.push([identifier, globalScopeObject[identifier]])
+                } else {
+                    // couldn't happen
+                }
+            }
+
+            orderedScopeArray.forEach(([identifier, value]) => {
+                if (identifier.substring(0, 4) !== "ans_"){
+                    filteredScopeArray.push([identifier, value])
+                }
+            })
+            setScope(filteredScopeArray)
+        } else {
+            // we do nothing.
+            // because there is an error.
+        }
         setValue("")
     }
     function onCalculateClick(){
@@ -199,6 +312,9 @@ function App(props){
     }
     function onToggleHandler(){
         setIsChemistryHandler((prevIsChemistryHandler) => !prevIsChemistryHandler)
+    }
+    function onToggleIsExact(){
+        setIsExact((prevIsExact) => !prevIsExact)
     }
     useEffect(() => {
         if (list.length > 0){
@@ -216,21 +332,23 @@ function App(props){
         setFocusedElementIndexPair([list.length, false])
     }, [list])
     useEffect(() => {
-        if (focusedElementIndexPair[1]){
-            if (focusedElementIndexPair[0] > -1){
-                if (list[focusedElementIndexPair[0]] !== undefined){
-                    let lastElement = list[focusedElementIndexPair[0]].ref.current
-                    if (lastElement !== undefined){
-                        if (detector.device.name === "vivo"){
-                            lastElement.scrollIntoView(false)
-                        } else {
-                            lastElement.scrollIntoView({ behavior : "smooth", block: "end", inline: "nearest" })
-                        }
-                    }
+        if (focusedElementIndexPair[1] && focusedElementIndexPair[0] > -1 && list[focusedElementIndexPair[0]] !== undefined){
+            let lastElement = list[focusedElementIndexPair[0]].ref.current
+            if (lastElement !== undefined){
+                if (detector.device.name === "vivo"){
+                    lastElement.scrollIntoView(false)
+                } else {
+                    lastElement.scrollIntoView({ behavior : "smooth", block: "end", inline: "nearest" })
                 }
             }
         }
     }, [focusedElementIndexPair])
+    useEffect(() => {
+        console.log(inputRef.current.value, inputCursor)
+        inputRef.current.selectionStart = inputCursor
+        inputRef.current.selectionEnd = inputCursor
+        inputRef.current.focus()
+    }, [inputCursor])
 
     return (<>
         <CssBaseline />
@@ -256,6 +374,11 @@ function App(props){
                         variant = "filled"
                         InputProps = {{
                             endAdornment : <InputAdornment position = "end">
+                                <IconButton onClick = { onToggleIsExact } color = {
+                                    isExact ? "primary" : "default"
+                                }>
+                                    <ExplicitIcon />
+                                </IconButton>
                                 <IconButton onClick = { onToggleHandler } color = {
                                     isChemistryHandler ? "primary" : "default"
                                 }>{
@@ -273,9 +396,10 @@ function App(props){
                         }}
                         onKeyDownCapture = { handleKeyDown }
                         onKeyPressCapture = { handleKeyPress }
-                        onChange = { (event) => { setValue(event.target.value) } }
+                        onChange = { (event) => { console.log("onChange");setValue(event.target.value) } }
                         value = { value }
-                        fullWidth size = "medium"/>
+                        fullWidth size = "medium"
+                        inputRef = { inputRef } />
                 </Grid>
             </Grid>
             <Grid item sm = { false } className = { classes.variableContent }>
@@ -322,11 +446,18 @@ const useResultContentTheme = makeStyles((theme) => ({
         borderWidth : 2,
         borderColor : theme.palette.secondary.main
     },
+    paperError : {
+        borderWidth : 2,
+        borderColor : red[700]
+    },
     hoverPrimary : {
         backgroundColor : theme.palette.primary.main
     },
     hoverSecondary : {
         backgroundColor : theme.palette.secondary.main
+    },
+    hoverError : {
+        backgroundColor : red[700]
     },
     expression : {
         userSelect : "none",
@@ -347,9 +478,36 @@ function ResultContent({ content , type , focused, onMouseEnter, onMouseLeave, o
 
     const isInput = type === "input"
     const justify = isInput ? "flex-end" : "flex-start"
-    const color = (isInput)
-        ? (focused) ? theme.palette.primary.contrastText : theme.palette.primary.main
-        : (focused) ? theme.palette.secondary.contrastText : theme.palette.secondary.main
+
+    let color;
+
+    if (type === "input"){
+        color = (focused) ? theme.palette.primary.contrastText : theme.palette.primary.main
+    } else if (type === "output"){
+        color = (focused) ? theme.palette.secondary.contrastText : theme.palette.secondary.main
+    } else {
+        color = (focused) ? theme.palette.secondary.contrastText : red[700]
+    }
+
+    let className;
+
+    if (type === "input"){
+        className = `${classes.paperPrimary}`
+    } else if (type === "output"){
+        className = `${classes.paperSecondary}`
+    } else {
+        className = `${classes.paperError}`
+    }
+
+    if (focused){
+        if (type === "input"){
+            className += ` ${classes.hoverPrimary}`
+        } else if (type === "output"){
+            className += ` ${classes.hoverSecondary}`
+        } else {
+            className += ` ${classes.hoverError}`
+        }
+    }
 
     function handleMouseEnter(){
         onMouseEnter(id)
@@ -370,10 +528,8 @@ function ResultContent({ content , type , focused, onMouseEnter, onMouseLeave, o
                 onClick = { handleClick }
                 className = {
                     `${ classes.paper }
-                     ${(isInput) ? classes.paperPrimary : classes.paperSecondary}
-                     ${(focused)
-                        ? (isInput) ? classes.hoverPrimary : classes.hoverSecondary
-                        : ""}` }>
+                     ${ className }`
+                    }>
                 <Box marginY = { 1 }
                     marginX = { 1.5 }
                     color = { color }
