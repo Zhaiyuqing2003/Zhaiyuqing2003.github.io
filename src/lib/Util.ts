@@ -98,9 +98,18 @@ export default class Util{
 
             this.calculator.assign(`ans`, returnList[returnList.length - 1])
 
-            return [returnList, variableList]
+
+            if (this.scopeRecording){
+                return [returnList, variableList, this.scope.getRecord()]
+            } else {
+                return [returnList, variableList]
+            }
         } else {
-            return [returnList]
+            if (this.scopeRecording){
+                return [returnList, this.scope.getRecord()]
+            } else {
+                return [returnList]
+            }
         }
     }
     private parseFunction(value: string, type: SimpleExpressionType): SignificantNumber{

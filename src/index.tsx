@@ -246,7 +246,7 @@ function App(props){
         let orderedVariables;
         try{
             if (isChemistryHandler){
-                [output, resultVariables] = util.evaluateAtomicMass(value)
+                [output, resultVariables, orderedVariables] = util.evaluateAtomicMass(value)
             } else {
                 [output, resultVariables, orderedVariables] = util.evaluate(value)
             }
