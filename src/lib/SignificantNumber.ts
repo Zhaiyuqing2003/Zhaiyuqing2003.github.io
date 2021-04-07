@@ -278,7 +278,13 @@ class SignificantNumber{
         if (this.SD === 0){
             return "0";
         } else {
-            return this.value.toPrecision(Math.min(this.SD, SignificantNumber.MAXIMUM_STRING_SD));
+            // since there might be something like 0.098, where SD and DP both 2.
+            // in this case, the result is actually 0.10, not 0.098.
+            if (this.DP === 0){
+                return this.value.toPrecision(this.SD).substr(0, SignificantNumber.MAXIMUM_STRING_LENGTH);
+            } else {
+                return this.value.toFixed(this.DP).substr(0, SignificantNumber.MAXIMUM_STRING_LENGTH)
+            }
         }
     }
     toExactString(){
@@ -322,7 +328,8 @@ class SignificantNumber{
             "integerSignificantLength" : 0,
             "fractionSignificantLength" : 0,
             "fractionLength" : 0,
-            "exponentialPart" : ""
+            "exponentialPart" : "",
+            "fractionPart" : ""
         }
 
         let isIntegerStartSignificant = false;
@@ -434,6 +441,7 @@ class SignificantNumber{
                             parsedInformation.fractionSignificantLength += 1;
                         }
 
+                        parsedInformation.fractionPart += char;
                         parsedInformation.fractionLength += 1;
 
                         break;
@@ -442,7 +450,7 @@ class SignificantNumber{
                     case "exponentialNegateIndicator":
                         currentNumberType = "numberWithExponential";
 
-                        parsedInformation.exponentialPart = parsedInformation.exponentialPart + char
+                        parsedInformation.exponentialPart += char
                         break;
                 }
             } else {
@@ -461,6 +469,7 @@ class SignificantNumber{
         let calculatedDP = 0;
 
         const exponentialNumber = Number(parsedInformation.exponentialPart)
+        const fractionPart = parsedInformation.fractionPart
 
         const fractionLength = parsedInformation.fractionLength
         const integerSignificantLength = parsedInformation.integerSignificantLength
@@ -498,7 +507,15 @@ class SignificantNumber{
 
                 if (fractionSignificantLength > stripedDP){
                     // fractionSignificantLength > 1
+
                     calculatedSD = originalSD - stripedDP
+
+                    if (fractionSignificantLength === stripedDP + 1){
+                        if (fractionPart[fractionLength - 1 - stripedDP] === "9" &&
+                            Number(fractionPart[fractionLength - stripedDP]) > 4){
+                            calculatedSD += 1;
+                        }
+                    }
                 } else if (stripedDP >= fractionSignificantLength){
                     if (integerSignificantLength === 0){
                         calculatedSD = 0
@@ -592,7 +609,7 @@ class SignificantNumber{
     private static PI = SignificantNumber.accurate(math.pi.toString())
     private static TEN = SignificantNumber.accurate("10")
     private static ONE = SignificantNumber.accurate("1")
-    private static MAXIMUM_STRING_SD = 64;
+    private static MAXIMUM_STRING_LENGTH = 64;
 }
 
 
@@ -619,7 +636,8 @@ type ParseInformation = {
     integerSignificantLength : number,
     fractionSignificantLength : number,
     fractionLength : number,
-    exponentialPart : string
+    exponentialPart : string,
+    fractionPart : string
 }
 
 export default SignificantNumber
