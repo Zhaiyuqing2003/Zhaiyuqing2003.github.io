@@ -82920,6 +82920,19 @@ var USE_APP_STYLE = styles_1.makeStyles(function (theme) {
     }
   };
 });
+var USE_SELECTION_STYLE = styles_1.makeStyles(function (theme) {
+  return {
+    radioLabel: {
+      userSelect: "none"
+    },
+    selectionQuestion: {
+      userSelect: "none"
+    },
+    button: {
+      marginLeft: "auto"
+    }
+  };
+});
 var TEST_DATA = {
   "bindGroups": [["male", "female"], ["career", "family"]],
   "groups": {
@@ -82932,6 +82945,35 @@ var TEST_DATA = {
 var TEST_TIMES = [20, 20, 20, 40, 28, 20, 40];
 var TEST_PROCESS = generateProcess();
 var TEST_ITERATOR = nextQuestion();
+var TEST_SELECTION_DATA = [{
+  question: "你认为家庭与男性和女性有多大联系?",
+  values: ["与男性有强烈联系", "与男性有中等联系", "与男性有一点联系", "男性女性联系一样", "与女性有一点联系", "与女性有中等联系", "与女性有强烈联系"]
+}, {
+  question: "你认为事业与男性和女性有多大联系?",
+  values: ["与男性有强烈联系", "与男性有中等联系", "与男性有一点联系", "男性女性联系一样", "与女性有一点联系", "与女性有中等联系", "与女性有强烈联系"]
+}, {
+  question: "家庭对你有多重要?",
+  values: ["极其重要", "非常重要", "比较重要", "不太重要", "很不重要"]
+}, {
+  question: "学业对你有多重要?",
+  values: ["极其重要", "非常重要", "比较重要", "不太重要", "很不重要"]
+}, {
+  question: "你的姓氏是什么样的?",
+  values: ["我父母使用相同姓氏，我也使用这个姓氏", "我父母使用不同姓氏，我用我父亲的姓氏", "我父母使用不同姓氏，我用我母亲的姓氏"]
+}, {
+  question: "在你小时候，谁是你最主要的照顾者?",
+  values: ["生母或养母", "生父或养父", "继母", "继父", "其他亲属", "其他"]
+}, {
+  question: "在你小时候，这个人是否需要外出工作?",
+  values: ["需要", "不需要"]
+}, {
+  question: "你出生的时候的生理性别是什么?",
+  values: ["男性", "女性"]
+}, {
+  question: "你自我认同的性别是什么?",
+  values: ["男性", "女性", "变性 (变完以后是男性)", "变性 (变完以后是女性)", "中性 / 不确定", "其他"]
+}];
+var SELECTION_ITERATOR = nextSelection();
 var TEST_TRANSLATE = {
   "male": "男性",
   "female": "女性",
@@ -82966,33 +83008,13 @@ var TEST_TRANSLATE = {
   "Career6": "演讲",
   "Career7": "编程"
 };
-var TEST_SELECTION_DATA = [{
-  question: "你认为家庭与男性和女性有多大联系？",
-  values: ["与男性有强烈联系", "与男性有中等联系", "与男性有一点联系", "男性女性联系一样", "与女性有一点联系", "与女性有中等联系", "与女性有强烈联系"]
-}, {
-  question: "你认为事业与男性和女性有多大联系？",
-  values: ["与男性有强烈联系", "与男性有中等联系", "与男性有一点联系", "男性女性联系一样", "与女性有一点联系", "与女性有中等联系", "与女性有强烈联系"]
-}, {
-  question: "家庭对你有多重要",
-  values: ["极其重要", "非常重要", "比较重要", "不太重要", "很不重要"]
-}, {
-  question: "学业对你有多重要",
-  values: ["极其重要", "非常重要", "比较重要", "不太重要", "很不重要"]
-}, {
-  question: "你的姓氏是什么样的？",
-  values: ["我父母使用相同姓氏，我也使用这个姓氏", "我父母使用不同姓氏，我用我父亲的姓氏", "我父母使用不同姓氏，我用我母亲的姓氏"]
-}, {
-  question: "在你小时候，谁是你最主要的照顾者？",
-  values: ["生母或养母", "生父或养父", "继母", "继父", "其他亲属", "其他"]
-}, {
-  question: "在你小时候，这个人是否需要外出工作"
-}];
 var TEST_RESULTS = Array.from(Array(7), function () {
   return {
-    groups: {},
+    groups: [],
     results: []
   };
 });
+var SELECTION_RESULTS = [];
 
 function generateProcess() {
   var bindGroups = TEST_DATA.bindGroups; // randomly choose the order of the gender and career
@@ -83117,6 +83139,43 @@ function nextQuestion() {
   });
 }
 
+function nextSelection() {
+  var _i, TEST_SELECTION_DATA_1, selection;
+
+  return __generator(this, function (_a) {
+    switch (_a.label) {
+      case 0:
+        _i = 0, TEST_SELECTION_DATA_1 = TEST_SELECTION_DATA;
+        _a.label = 1;
+
+      case 1:
+        if (!(_i < TEST_SELECTION_DATA_1.length)) return [3
+        /*break*/
+        , 4];
+        selection = TEST_SELECTION_DATA_1[_i];
+        return [4
+        /*yield*/
+        , selection];
+
+      case 2:
+        _a.sent();
+
+        _a.label = 3;
+
+      case 3:
+        _i++;
+        return [3
+        /*break*/
+        , 1];
+
+      case 4:
+        return [2
+        /*return*/
+        , 0];
+    }
+  });
+}
+
 function doubleRandomPickAndShuffle(times, _a, _b) {
   var firstType = _a[0],
       secondType = _a[1];
@@ -83211,13 +83270,30 @@ function CategoriesElement(_a) {
   }, index === 0 ? /*#__PURE__*/React.createElement(core_1.Typography, null, "\u8BF7\u6309", /*#__PURE__*/React.createElement("b", null, "E")) : /*#__PURE__*/React.createElement(core_1.Typography, null, "\u8BF7\u6309", /*#__PURE__*/React.createElement("b", null, "I"))));
 }
 
+function triggerDownload(content, filename) {
+  // 创建隐藏的可下载链接
+  var eleLink = document.createElement('a');
+  eleLink.download = filename;
+  eleLink.style.display = 'none'; // 字符内容转变成blob地址
+
+  var blob = new Blob([content]);
+  eleLink.href = URL.createObjectURL(blob); // 触发点击
+
+  document.body.appendChild(eleLink);
+  eleLink.click(); // 然后移除
+
+  document.body.removeChild(eleLink);
+}
+
+;
+
 function App() {
   function onStartTest() {
     setTestState("ongoing");
   }
 
   function onNextTest() {
-    setTestState("result");
+    setTestState("selection");
   }
 
   function onEndTest() {
@@ -83261,7 +83337,9 @@ function InitialPage(_a) {
   var TABLE_CLASSES = USE_TABLE_STYLE();
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(core_1.Typography, {
     paragraph: true
-  }, "\u63A5\u4E0B\u6765\uFF0C\u4F60\u5C06\u4F7F\u7528\u952E\u76D8\u4E0A\u7684", /*#__PURE__*/React.createElement("b", null, "E"), "\u952E\u548C", /*#__PURE__*/React.createElement("b", null, "I"), "\u952E\u6765\u628A\u4EE5\u4E0B\u8BCD\u8BED\u5206\u7EC4\u3002\u8FD9\u662F\u56DB\u4E2A\u7EC4\u548C\u5B83\u4EEC\u5305\u62EC\u7684\u8BCD\u8BED\uFF1A"), /*#__PURE__*/React.createElement(TableContainer_1.default, {
+  }, "\u6B22\u8FCE!\u5728\u8FD9\u9879\u6D4B\u8BD5\u4E2D\uFF0C\u4F60\u5C06\u5B8C\u6210\u4E00\u9879\u9690\u6027\u8054\u60F3\u6D4B\u8BD5(IAT)\u3002\u8FD9\u4E2A\u6D4B\u8BD5\u88AB\u5206\u4E3A\u4E24\u90E8\u5206\u3002"), /*#__PURE__*/React.createElement(core_1.Typography, {
+    paragraph: true
+  }, "\u5728\u7B2C\u4E00\u90E8\u5206\u4E2D\uFF0C\u4F60\u5C06\u4F7F\u7528\u952E\u76D8\u4E0A\u7684", /*#__PURE__*/React.createElement("b", null, "E"), "\u952E\u548C", /*#__PURE__*/React.createElement("b", null, "I"), "\u952E\u6765\u628A\u4EE5\u4E0B\u8BCD\u8BED\u5206\u7EC4\u3002\u8FD9\u662F\u56DB\u4E2A\u7EC4\u548C\u5B83\u4EEC\u5305\u62EC\u7684\u8BCD\u8BED\uFF1A"), /*#__PURE__*/React.createElement(TableContainer_1.default, {
     className: TABLE_CLASSES.tableContainer
   }, /*#__PURE__*/React.createElement(Table_1.default, {
     size: "small"
@@ -83280,126 +83358,104 @@ function InitialPage(_a) {
     }).join(", ")));
   })))), /*#__PURE__*/React.createElement(core_1.Typography, {
     paragraph: true
-  }, "\u8FD9\u4E2A\u6D4B\u8BD5\u6709\u4E03\u4E2A\u90E8\u5206\uFF0C\u6BCF\u4E2A\u90E8\u5206\u7684\u6307\u793A\u90FD\u6709\u6240\u53D8\u5316\uFF0C\u8BF7\u6CE8\u610F\u533A\u5206\uFF01"), /*#__PURE__*/React.createElement(core_1.Button, {
+  }, "\u7B2C\u4E00\u90E8\u5206\u6709\u5305\u542B7\u4E2A\u5B50\u90E8\u5206\uFF0C\u6BCF\u4E2A\u5B50\u90E8\u5206\u7684\u6307\u793A\u90FD\u6709\u6240\u53D8\u5316\uFF0C\u8BF7\u6CE8\u610F\u533A\u5206\uFF01"), /*#__PURE__*/React.createElement(core_1.Typography, {
+    paragraph: true
+  }, "\u7B2C\u4E8C\u90E8\u5206\u5305\u542B\u4E00\u4E9B\u5173\u4E8E\u6001\u5EA6\u548C\u89C2\u70B9\u7684\u95EE\u9898\u3002 \u8FD9\u9879\u6D4B\u8BD5\u4E00\u5171\u9700\u8981\u5927\u7EA610\u5206\u949F\u3002\u611F\u8C22\u4F60\u7684\u53C2\u4E0E!"), /*#__PURE__*/React.createElement(core_1.Button, {
     color: "primary",
     variant: "contained",
     disableElevation: true,
     onClick: onStartTest
-  }, "\u5F00\u59CB\u6D4B\u8BD5"));
+  }, "\u5F00\u59CB\u7B2C\u4E00\u90E8\u5206\u7684\u6D4B\u8BD5"));
 }
 
 function SelectionPage(_a) {
   var onEndTest = _a.onEndTest;
 
-  var _b = react_1.useState([]),
-      valueList = _b[0],
-      setValueList = _b[1];
+  var _b = react_1.useState(function () {
+    return SELECTION_ITERATOR.next();
+  }),
+      selection = _b[0],
+      setSelection = _b[1];
 
-  function handleChange() {}
+  var _c = react_1.useState(-1),
+      value = _c[0],
+      setValue = _c[1];
+
+  var CLASSES = USE_SELECTION_STYLE();
+  var THEME = core_1.useTheme();
+
+  function handleChange(event) {
+    setValue(Number(event.target.value));
+  }
+
+  function handleSelect() {
+    if (selection.done) {
+      onEndTest();
+    } else {
+      if (value >= 0) {
+        SELECTION_RESULTS.push(value);
+        setValue(-1);
+        setSelection(SELECTION_ITERATOR.next());
+      }
+    }
+  }
+
+  var selectionInfos = selection.value;
+  var cardContent;
+
+  if (selection.done) {
+    cardContent = /*#__PURE__*/React.createElement(core_1.Box, {
+      textAlign: "center",
+      padding: 2
+    }, /*#__PURE__*/React.createElement(core_1.Typography, null, "\u6D4B\u8BD5\u5DF2\u5B8C\u6210\u3002", /*#__PURE__*/React.createElement(core_1.Button, {
+      onClick: handleSelect,
+      color: "primary",
+      variant: "contained",
+      disableElevation: true
+    }, "\u663E\u793A\u7ED3\u679C")));
+  } else {
+    cardContent = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(core_1.CardContent, null, /*#__PURE__*/React.createElement(core_1.Box, {
+      padding: THEME.spacing(1, 2, 0),
+      marginBottom: -1.5
+    }, /*#__PURE__*/React.createElement(core_1.Grid, {
+      container: true,
+      direction: "column"
+    }, /*#__PURE__*/React.createElement(core_1.FormControl, {
+      component: "fieldset"
+    }, /*#__PURE__*/React.createElement(core_1.Typography, {
+      paragraph: true,
+      className: CLASSES.selectionQuestion
+    }, /*#__PURE__*/React.createElement(core_1.Box, {
+      component: "span",
+      fontWeight: "bold",
+      fontSize: "1.15rem"
+    }, selectionInfos.question)), /*#__PURE__*/React.createElement(core_1.RadioGroup, {
+      onChange: handleChange,
+      value: value
+    }, selectionInfos.values.map(function (value, index) {
+      return /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
+        className: CLASSES.radioLabel,
+        value: index,
+        key: index,
+        control: /*#__PURE__*/React.createElement(core_1.Radio, {
+          color: "primary"
+        }),
+        label: value
+      });
+    })))))), /*#__PURE__*/React.createElement(core_1.CardActions, null, /*#__PURE__*/React.createElement(core_1.Box, {
+      padding: THEME.spacing(0, 2, 2),
+      marginLeft: "auto"
+    }, /*#__PURE__*/React.createElement(core_1.Button, {
+      onClick: handleSelect,
+      color: "primary",
+      variant: "contained",
+      disableElevation: true
+    }, "\u4E0B\u4E00\u9898"))));
+  }
 
   return /*#__PURE__*/React.createElement(core_1.Card, {
     variant: "outlined"
-  }, /*#__PURE__*/React.createElement(core_1.FormControl, {
-    component: "fieldset"
-  }, /*#__PURE__*/React.createElement(core_1.FormLabel, {
-    component: "legend"
-  }, "\u4F60\u8BA4\u4E3A\u5BB6\u5EAD\u4E0E\u7537\u6027\u548C\u5973\u6027\u6709\u591A\u5927\u8054\u7CFB\uFF1F"), /*#__PURE__*/React.createElement(core_1.RadioGroup, {
-    name: "1",
-    value: "female",
-    onChange: handleChange
-  }, /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 0,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u5F3A\u70C8\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 1,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u4E2D\u7B49\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 2,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u4E00\u70B9\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 3,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u7537\u6027\u5973\u6027\u8054\u7CFB\u4E00\u6837"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 4,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u4E00\u70B9\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 5,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u4E2D\u7B49\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 6,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u5F3A\u70C8\u8054\u7CFB"
-  }))), /*#__PURE__*/React.createElement(core_1.FormControl, {
-    component: "fieldset"
-  }, /*#__PURE__*/React.createElement(core_1.FormLabel, {
-    component: "legend"
-  }, "\u4F60\u8BA4\u4E3A\u4E8B\u4E1A\u4E0E\u7537\u6027\u548C\u5973\u6027\u6709\u591A\u5927\u8054\u7CFB\uFF1F"), /*#__PURE__*/React.createElement(core_1.RadioGroup, {
-    name: "2",
-    value: "female",
-    onChange: handleChange
-  }, /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 0,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u5F3A\u70C8\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 1,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u4E2D\u7B49\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 2,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u7537\u6027\u6709\u4E00\u70B9\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 3,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u7537\u6027\u5973\u6027\u8054\u7CFB\u4E00\u6837"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 4,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u4E00\u70B9\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 5,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u4E2D\u7B49\u8054\u7CFB"
-  }), /*#__PURE__*/React.createElement(core_1.FormControlLabel, {
-    value: 6,
-    control: /*#__PURE__*/React.createElement(core_1.Radio, {
-      color: "primary"
-    }),
-    label: "\u4E0E\u5973\u6027\u6709\u5F3A\u70C8\u8054\u7CFB"
-  }))));
+  }, cardContent);
 }
 
 function OnGoingPage(_a) {
@@ -83418,7 +83474,6 @@ function OnGoingPage(_a) {
 
   var startTime = new Date().getTime();
   var questionInfos = questionAndGroup.value;
-  console.log(questionInfos);
   react_1.useEffect(function () {
     var update = function update(event) {
       var code = event.code;
@@ -83476,7 +83531,7 @@ function OnGoingPage(_a) {
       textAlign: "center",
       padding: 2,
       paddingBottom: 1
-    }, /*#__PURE__*/React.createElement(core_1.Typography, null, "\u6D4B\u8BD5\u5DF2\u5B8C\u6210 ", /*#__PURE__*/React.createElement("br", null), "\u8BF7\u6309\u7A7A\u683C\u952E\u663E\u793A\u6D4B\u8BD5\u7ED3\u679C"));
+    }, /*#__PURE__*/React.createElement(core_1.Typography, null, "\u7B2C\u4E00\u90E8\u5206\u5DF2\u5B8C\u6210\u3002 ", /*#__PURE__*/React.createElement("br", null), "\u8BF7\u6309\u4E0B\u7A7A\u683C\u952E\u4EE5\u5F00\u59CB\u7B2C\u4E8C\u90E8\u5206\u6D4B\u8BD5\u3002"));
   } else {
     var instructionContent = void 0;
 
@@ -83546,7 +83601,9 @@ function OnGoingPage(_a) {
       }
     }
 
-    cardContent = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(core_1.Grid, {
+    cardContent = /*#__PURE__*/React.createElement(core_1.Box, {
+      paddingX: 0.5
+    }, /*#__PURE__*/React.createElement(core_1.Grid, {
       container: true,
       justify: "space-between"
     }, questionInfos.group.map(function (value, index) {
@@ -83576,63 +83633,124 @@ function OnGoingPage(_a) {
 }
 
 function ResultPage() {
-  return /*#__PURE__*/React.createElement(TableContainer_1.default, null, /*#__PURE__*/React.createElement(Table_1.default, {
+  function downloadData() {
+    var jsonObject = {
+      firstPart: TEST_RESULTS.map(function (value) {
+        return {
+          groups: value.groups.map(function (group) {
+            return typeof group === "string" ? TEST_TRANSLATE[group] : [TEST_TRANSLATE[group[0]], TEST_TRANSLATE[group[1]]];
+          }),
+          results: value.results.map(function (result) {
+            return {
+              question: TEST_TRANSLATE[result.question],
+              time: result.time,
+              isError: result.isError
+            };
+          })
+        };
+      }),
+      secondPart: SELECTION_RESULTS.map(function (selection, index) {
+        return {
+          question: TEST_SELECTION_DATA[index].question,
+          answer: TEST_SELECTION_DATA[index].values[selection]
+        };
+      })
+    };
+    triggerDownload(JSON.stringify(jsonObject), "questionnaire.json");
+  }
+
+  return /*#__PURE__*/React.createElement(TableContainer_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "h6",
+    component: "div"
+  }, /*#__PURE__*/React.createElement(core_1.Box, {
+    padding: 1.5,
+    fontWeight: "700",
+    textAlign: "center"
+  }, "\u7B2C\u4E00\u90E8\u5206")), /*#__PURE__*/React.createElement(Table_1.default, {
     size: "small"
-  }, /*#__PURE__*/React.createElement(TableHead_1.default, null, /*#__PURE__*/React.createElement(TableRow_1.default, null, /*#__PURE__*/React.createElement(TableCell_1.default, null, "\u9009\u9879"), /*#__PURE__*/React.createElement(TableCell_1.default, null, "\u82B1\u8D39\u65F6\u95F4"), /*#__PURE__*/React.createElement(TableCell_1.default, null, "\u662F\u5426\u9519\u8BEF"))), /*#__PURE__*/React.createElement(TableBody_1.default, null, TEST_RESULTS.map(function (value, index) {
+  }, /*#__PURE__*/React.createElement(TableHead_1.default, null, /*#__PURE__*/React.createElement(TableRow_1.default, null, /*#__PURE__*/React.createElement(TableCell_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "subtitle1"
+  }, /*#__PURE__*/React.createElement("b", null, "\u9009\u9879"))), /*#__PURE__*/React.createElement(TableCell_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "subtitle1"
+  }, /*#__PURE__*/React.createElement("b", null, "\u82B1\u8D39\u65F6\u95F4"))), /*#__PURE__*/React.createElement(TableCell_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "subtitle1"
+  }, /*#__PURE__*/React.createElement("b", null, "\u662F\u5426\u9519\u8BEF"))))), /*#__PURE__*/React.createElement(TableBody_1.default, null, TEST_RESULTS.map(function (value, index) {
     var resultList = value.results.map(function (result, resultIndex) {
       return /*#__PURE__*/React.createElement(TableRow_1.default, {
         key: index + "_" + resultIndex
       }, /*#__PURE__*/React.createElement(TableCell_1.default, null, TEST_TRANSLATE[result.question]), /*#__PURE__*/React.createElement(TableCell_1.default, null, result.time / 1000), /*#__PURE__*/React.createElement(TableCell_1.default, null, result.isError ? "是" : "否"));
     });
-    resultList.unshift( /*#__PURE__*/React.createElement(TableRow_1.default, null, /*#__PURE__*/React.createElement(TableCell_1.default, null, typeof value.groups[0] === "string" ? /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[0] === "male" || value.groups[0] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[0]]))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[0][0] === "male" || value.groups[0][0] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[0][0]]))), /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[0][1] === "male" || value.groups[0][1] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[0][1]])))), typeof value.groups[1] === "string" ? /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[1] === "male" || value.groups[1] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[1]]))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[1][0] === "male" || value.groups[1][0] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[1][0]]))), /*#__PURE__*/React.createElement(core_1.Box, {
-      color: value.groups[1][1] === "male" || value.groups[1][1] === "female" ? "blue" : "green",
-      component: "span",
-      paddingRight: 0.75
-    }, /*#__PURE__*/React.createElement(core_1.Typography, {
-      variant: "h6",
-      component: "span"
-    }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[value.groups[1][1]]))))), /*#__PURE__*/React.createElement(TableCell_1.default, null, value.results.reduce(function (prev, curr) {
+    resultList.unshift( /*#__PURE__*/React.createElement(TableRow_1.default, {
+      key: index
+    }, /*#__PURE__*/React.createElement(TableCell_1.default, null, value.groups.map(function (group, groupIndex) {
+      return typeof group === "string" ? /*#__PURE__*/React.createElement(core_1.Box, {
+        key: groupIndex,
+        color: group === "male" || group === "female" ? "blue" : "green",
+        component: "span",
+        paddingRight: 0.75
+      }, /*#__PURE__*/React.createElement(core_1.Typography, {
+        variant: "subtitle1",
+        component: "span"
+      }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[group]))) : /*#__PURE__*/React.createElement(React.Fragment, {
+        key: groupIndex
+      }, /*#__PURE__*/React.createElement(core_1.Box, {
+        color: group[0] === "male" || group[0] === "female" ? "blue" : "green",
+        component: "span",
+        paddingRight: 0.5
+      }, /*#__PURE__*/React.createElement(core_1.Typography, {
+        variant: "subtitle1",
+        component: "span"
+      }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[group[0]]))), /*#__PURE__*/React.createElement(core_1.Box, {
+        component: "span",
+        paddingRight: 0.5
+      }, /*#__PURE__*/React.createElement(core_1.Typography, {
+        variant: "subtitle1",
+        component: "span"
+      }, /*#__PURE__*/React.createElement("b", null, "+"))), /*#__PURE__*/React.createElement(core_1.Box, {
+        color: group[1] === "male" || group[1] === "female" ? "blue" : "green",
+        component: "span",
+        paddingRight: 1
+      }, /*#__PURE__*/React.createElement(core_1.Typography, {
+        variant: "subtitle1",
+        component: "span"
+      }, /*#__PURE__*/React.createElement("b", null, TEST_TRANSLATE[group[1]]))));
+    }), " "), /*#__PURE__*/React.createElement(TableCell_1.default, null, value.results.reduce(function (prev, curr) {
       return {
         time: prev.time + curr.time
       };
-    }).time / 1000), /*#__PURE__*/React.createElement(TableCell_1.default, null)));
+    }).time / 1000), /*#__PURE__*/React.createElement(TableCell_1.default, null, "N/A")));
     return resultList;
-  }))));
+  }))), /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "h6",
+    component: "div"
+  }, /*#__PURE__*/React.createElement(core_1.Box, {
+    padding: 1.5,
+    paddingTop: 7,
+    fontWeight: "700",
+    textAlign: "center"
+  }, "\u7B2C\u4E8C\u90E8\u5206")), /*#__PURE__*/React.createElement(Table_1.default, null, /*#__PURE__*/React.createElement(TableHead_1.default, null, /*#__PURE__*/React.createElement(TableRow_1.default, null, /*#__PURE__*/React.createElement(TableCell_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "subtitle1"
+  }, /*#__PURE__*/React.createElement("b", null, "\u95EE\u9898"))), /*#__PURE__*/React.createElement(TableCell_1.default, null, /*#__PURE__*/React.createElement(core_1.Typography, {
+    variant: "subtitle1"
+  }, /*#__PURE__*/React.createElement("b", null, "\u9009\u9879"))))), /*#__PURE__*/React.createElement(TableBody_1.default, null, SELECTION_RESULTS.map(function (value, index) {
+    return /*#__PURE__*/React.createElement(TableRow_1.default, {
+      key: index
+    }, /*#__PURE__*/React.createElement(TableCell_1.default, null, TEST_SELECTION_DATA[index].question), /*#__PURE__*/React.createElement(TableCell_1.default, null, TEST_SELECTION_DATA[index].values[value]));
+  }))), /*#__PURE__*/React.createElement(core_1.Box, {
+    padding: 2,
+    paddingTop: 5
+  }, /*#__PURE__*/React.createElement(core_1.Grid, {
+    container: true,
+    justify: "center"
+  }, /*#__PURE__*/React.createElement(core_1.Grid, {
+    item: true
+  }, /*#__PURE__*/React.createElement(core_1.Button, {
+    size: "large",
+    disableElevation: true,
+    variant: "contained",
+    color: "primary",
+    onClick: downloadData
+  }, "\u4E0B\u8F7D\u6D4B\u8BD5\u6570\u636E")))));
 }
 
 window.onload = function () {
@@ -83671,7 +83789,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51296" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53166" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
