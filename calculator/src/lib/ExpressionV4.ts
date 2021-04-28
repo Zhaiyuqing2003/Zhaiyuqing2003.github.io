@@ -770,7 +770,7 @@ class Expression{
                             break;
                         }
 
-                        if (Expression.getOperatorPriority(expression as Operator) < Expression.getOperatorPriority(operatorExpression as Operator)){
+                        if (Expression.getOperatorPriority(expression as Operator) <= Expression.getOperatorPriority(operatorExpression as Operator)){
                             result.push([operatorExpression, operatorType === "assign" ? "operator" : operatorType])
                             continue
                         }
