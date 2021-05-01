@@ -82967,6 +82967,12 @@ var TEST_SELECTION_DATA = [{
   question: "在你小时候，这个人是否需要外出工作?",
   values: ["需要", "不需要"]
 }, {
+  question: "在你小时候，谁是你第二主要的照顾者?",
+  values: ["生母或养母", "生父或养父", "继母", "继父", "其他亲属", "其他"]
+}, {
+  question: "在你小时候，这个人是否需要外出工作?",
+  values: ["需要", "不需要"]
+}, {
   question: "你出生的时候的生理性别是什么?",
   values: ["男性", "女性"]
 }, {
@@ -83789,7 +83795,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53166" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50281" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
